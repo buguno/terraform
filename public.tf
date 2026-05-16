@@ -4,10 +4,13 @@ resource "aws_subnet" "eks_subnet_public_1a" {
   availability_zone       = "${data.aws_region.current.region}a"
   map_public_ip_on_launch = true
 
-  tags = {
-    Name                     = "terraform_eks_subnet_public_1a",
-    "kubernetes.io/role/elb" = 1
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name                     = "terraform_eks_subnet_public_1a",
+      "kubernetes.io/role/elb" = 1
+    }
+  )
 }
 
 resource "aws_subnet" "eks_subnet_public_1b" {
@@ -16,8 +19,11 @@ resource "aws_subnet" "eks_subnet_public_1b" {
   availability_zone       = "${data.aws_region.current.region}b"
   map_public_ip_on_launch = true
 
-  tags = {
-    Name                     = "terraform_eks_subnet_public_1b",
-    "kubernetes.io/role/elb" = 1
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name                     = "terraform_eks_subnet_public_1b",
+      "kubernetes.io/role/elb" = 1
+    }
+  )
 }
