@@ -5,17 +5,50 @@ This project provisions a production-ready **Amazon EKS** cluster on AWS using T
 ## Architecture
 
 ```mermaid
-graph TD
-    network["<b>network</b><br/>VPC · Public &amp; Private Subnets<br/>IGW · NAT Gateways · Route Tables"]
-    cluster["<b>cluster</b><br/>EKS Control Plane<br/>IAM Roles"]
-    node_group["<b>managed-node-group</b><br/>EC2 Worker Nodes"]
-    alb["<b>aws-load-balancer-controller</b><br/>Helm Release · IAM Role (IRSA)"]
+graph TB
+    Internet(["Internet"])
 
-    network -->|"subnet_pub_1a/1b"| cluster
-    network -->|"subnet_priv_1a/1b"| node_group
-    network -->|"vpc_id"| alb
-    cluster -->|"cluster_name"| node_group
-    cluster -->|"cluster_name · oidc"| alb
+    subgraph region["AWS Region"]
+        IGW["Internet Gateway"]
+        ALB["Application Load Balancer"]
+
+        subgraph vpc["VPC"]
+            subgraph az_1a["Availability Zone — us-east-1a"]
+                subgraph pub_1a["Public Subnet"]
+                    NGW_1A["NAT Gateway"]
+                end
+                subgraph priv_1a["Private Subnet"]
+                    NODE_1A["EC2 Worker Node"]
+                end
+            end
+
+            subgraph az_1b["Availability Zone — us-east-1b"]
+                subgraph pub_1b["Public Subnet"]
+                    NGW_1B["NAT Gateway"]
+                end
+                subgraph priv_1b["Private Subnet"]
+                    NODE_1B["EC2 Worker Node"]
+                end
+            end
+        end
+
+        subgraph eks["Amazon EKS"]
+            CP["EKS Control Plane"]
+            LBC["Load Balancer Controller<br/>(IAM Role via IRSA)"]
+        end
+    end
+
+    Internet -->|"incoming request"| IGW
+    IGW --> ALB
+    ALB -->|"routes to pods"| NODE_1A
+    ALB -->|"routes to pods"| NODE_1B
+    NODE_1A -->|"outbound traffic"| NGW_1A
+    NODE_1B -->|"outbound traffic"| NGW_1B
+    NGW_1A -->|"via IGW"| IGW
+    NGW_1B -->|"via IGW"| IGW
+    CP -->|"manages"| NODE_1A
+    CP -->|"manages"| NODE_1B
+    LBC -->|"provisions"| ALB
 ```
 
 <!-- BEGIN_TF_DOCS -->
