@@ -2,6 +2,22 @@
 
 This project provisions a production-ready **Amazon EKS** cluster on AWS using Terraform. It is structured into reusable modules that cover the full infrastructure stack, including networking, the EKS control plane, managed node groups, and the AWS Load Balancer Controller.
 
+## Architecture
+
+```mermaid
+graph TD
+    network["<b>network</b><br/>VPC · Public &amp; Private Subnets<br/>IGW · NAT Gateways · Route Tables"]
+    cluster["<b>cluster</b><br/>EKS Control Plane<br/>IAM Roles"]
+    node_group["<b>managed-node-group</b><br/>EC2 Worker Nodes"]
+    alb["<b>aws-load-balancer-controller</b><br/>Helm Release · IAM Role (IRSA)"]
+
+    network -->|"subnet_pub_1a/1b"| cluster
+    network -->|"subnet_priv_1a/1b"| node_group
+    network -->|"vpc_id"| alb
+    cluster -->|"cluster_name"| node_group
+    cluster -->|"cluster_name · oidc"| alb
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
